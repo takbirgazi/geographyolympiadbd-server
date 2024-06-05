@@ -11,6 +11,7 @@ const { MongoClient, ServerApiVersion } = require('mongodb');
 
 
 // MongoDB Start
+// https://geographyolympiadbd-server.vercel.app 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.mbbwdlc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
