@@ -31,17 +31,28 @@ async function run() {
         // Database and Collections
         const database = client.db('geographyolympiad');
         const allUsers = database.collection('users');
+        const registerUser = database.collection('registerUser');
 
 
-        app.get('/users', async(req, res)=>{
-           const user =await allUsers.find().toArray();
-           res.send(user);
+        app.get('/users', async (req, res) => {
+            const user = await allUsers.find().toArray();
+            res.send(user);
         });
-        app.post('/users', async(req, res)=>{
+        app.post('/users', async (req, res) => {
             const data = req.body;
+            const query = { email: data.email };
+            const existUser = await allUsers.findOne(query);
+            if (existUser) {
+                return res.send({ message: 'Already Have The User', insertedId: null });
+            };
             const result = await allUsers.insertOne(data);
             res.send(result);
         });
+        app.post('/registration', async (req, res) => {
+            const regData = req.body;
+            const result = await registerUser.insertOne(regData);
+            res.send(result);
+        })
 
 
         // Send a ping to confirm a successful connection
