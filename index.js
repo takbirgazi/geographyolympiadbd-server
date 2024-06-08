@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const jwt = require('jsonwebtoken');
 const app = express();
 require("dotenv").config();
 const port = process.env.PORT || 5000;
@@ -34,10 +35,36 @@ async function run() {
         const registerUser = database.collection('registerUser');
 
 
+        // Token Verify
+        const verifyToken = (req, res, next) => {
+            if (!req.headers.authorization) {
+                return res.status(401).send({ message: 'Unauthorize access' })
+            }
+            const token = req.headers.authorization.split(' ')[1];
+            jwt.verify(token, process.env.JWT_ACCESS_TOKEN, (err, decoded) => {
+                if (err) {
+                    return res.status(401).send({ message: 'unauthorize access' })
+                }
+                req.decoded = decoded;
+                next();
+            })
+        }
+
+        //JWT API
+        app.post("/jwt", (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.JWT_ACCESS_TOKEN, {
+                expiresIn: "1h"
+            })
+            res.send(token);
+        })
+
+        /*-------------------------------------
         app.get('/users', async (req, res) => {
             const user = await allUsers.find().toArray();
             res.send(user);
         });
+        ----------------------------------------*/
         app.post('/users', async (req, res) => {
             const data = req.body;
             const query = { email: data.email };
@@ -48,7 +75,7 @@ async function run() {
             const result = await allUsers.insertOne(data);
             res.send(result);
         });
-        app.post('/registration', async (req, res) => {
+        app.post('/registration', verifyToken, async (req, res) => {
             const regData = req.body;
             const result = await registerUser.insertOne(regData);
             res.send(result);
