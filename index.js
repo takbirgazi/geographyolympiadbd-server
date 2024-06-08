@@ -59,12 +59,12 @@ async function run() {
             res.send(token);
         })
 
-        /*-------------------------------------
-        app.get('/users', async (req, res) => {
-            const user = await allUsers.find().toArray();
-            res.send(user);
+        app.get('/users/registration/:email', verifyToken, async (req, res) => {
+            const email = req.params.email;
+            const query = { email }
+            const result = await allUsers.findOne(query);
+            res.send(result);
         });
-        ----------------------------------------*/
         app.post('/users', async (req, res) => {
             const data = req.body;
             const query = { email: data.email };
@@ -75,9 +75,42 @@ async function run() {
             const result = await allUsers.insertOne(data);
             res.send(result);
         });
+
+        app.patch("/users/:email", verifyToken, async (req, res) => {
+            const email = req.params.email;
+            const query = { email };
+            const updateData = {
+                $set: {
+                    isRegister: "Registered"
+                }
+            }
+            const result = await allUsers.updateOne(query, updateData);
+            res.send(result);
+        })
+
         app.post('/registration', verifyToken, async (req, res) => {
             const regData = req.body;
             const result = await registerUser.insertOne(regData);
+            res.send(result);
+        })
+        app.get("/registration/:stdEmail", async (req, res) => {
+            const stdEmail = req.params;
+            const option = {
+                projection: {
+                    _id: 0,
+                    stdName: 1,
+                    stdDOB: 1,
+                    stdPhone: 1,
+                    stdEmail: 1,
+                    stdPresentAddr: 1,
+                    stdPermanentAddr: 1,
+                    expectedLevel: 1,
+                    stdSclClzName: 1,
+                    stdSclClzAddr: 1,
+                    pssExprDate: 1,
+                },
+            }
+            const result = await registerUser.findOne(stdEmail, option);
             res.send(result);
         })
 
