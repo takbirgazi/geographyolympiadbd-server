@@ -3,12 +3,19 @@ const cors = require("cors");
 const jwt = require('jsonwebtoken');
 const app = express();
 require("dotenv").config();
+
+// SSL Commerz Start
+const SSLCommerzPayment = require('sslcommerz-lts')
+const store_id = process.env.SSLCOMMERZ_STORE_ID
+const store_passwd = process.env.SSLCOMMERZ_STORE_PASS
+const is_live = false //true for live, false for sandbox
+//SSL Commerz End
 const port = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 
 // MongoDB Start
@@ -33,6 +40,74 @@ async function run() {
         const database = client.db('geographyolympiad');
         const allUsers = database.collection('users');
         const registerUser = database.collection('registerUser');
+
+
+        // SSL Commerz
+        //sslcommerz init
+        const tranjectionId = new ObjectId().toString()
+        app.post("/order", async (req, res) => {
+            const product = await registerUser.findOne({ _id: new ObjectId(req.body._id) });
+
+            const data = {
+                total_amount: 100,
+                currency: 'BDT',
+                tran_id: `TG_ID_${tranjectionId}`, // use unique tran_id for each api call
+                success_url: `${process.env.CLIENT_SERVER_API}/payment/success/${tranjectionId}`,
+                fail_url: `${process.env.CLIENT_SERVER_API}/payment/fail`,
+                cancel_url: `${process.env.CLIENT_SERVER_API}/payment/cancel`,
+                ipn_url: `${process.env.CLIENT_SERVER_API}/payment/ipn`,
+                shipping_method: 'No Shipping',
+                product_name: 'geographyolympiadbd',
+                product_category: 'geographyolympiadbd',
+                product_profile: 'Register',
+                cus_name: product.stdName,
+                cus_email: product.stdEmail,
+                cus_add1: 'Bangladesh',
+                cus_add2: 'Bangladesh',
+                cus_city: 'Bangladesh',
+                cus_state: 'Bangladesh',
+                cus_postcode: '1000',
+                cus_country: 'Bangladesh',
+                cus_phone: product.stdPhone,
+                cus_fax: product.stdPhone,
+                ship_name: product.stdName,
+                ship_add1: 'Bangladesh',
+                ship_add2: 'Bangladesh',
+                ship_city: 'Bangladesh',
+                ship_state: 'Bangladesh',
+                ship_postcode: 1000,
+                ship_country: 'Bangladesh',
+            };
+
+            const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live)
+            sslcz.init(data).then(apiResponse => {
+                // Redirect the user to payment gateway
+                let GatewayPageURL = apiResponse.GatewayPageURL
+                res.send({ url: GatewayPageURL })
+            });
+
+            app.post(`/payment/success/:tran_id`, (req, res) => {
+                const paymentSuccess = req.params.tran_id;
+                const email = product.stdEmail;
+                const query = { email };
+                const updateData = {
+                    $set: {
+                        isRegister: "Paid"
+                    }
+                }
+                allUsers.updateOne(query, updateData);
+                res.redirect("http://localhost:5173/registration")
+            });
+
+            app.post(`/payment/fail`, (req, res) => {
+                res.redirect("http://localhost:5173/registration")
+            });
+            app.post(`/payment/cancel`, (req, res) => {
+                res.redirect("http://localhost:5173/registration")
+            });
+
+        })
+        // SSL Commerz
 
 
         // Token Verify
@@ -97,7 +172,6 @@ async function run() {
             const stdEmail = req.params;
             const option = {
                 projection: {
-                    _id: 0,
                     stdName: 1,
                     stdDOB: 1,
                     stdPhone: 1,
