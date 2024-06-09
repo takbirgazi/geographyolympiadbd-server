@@ -40,6 +40,7 @@ async function run() {
         const database = client.db('geographyolympiad');
         const allUsers = database.collection('users');
         const registerUser = database.collection('registerUser');
+        const paymentInfo = database.collection('payment');
 
 
         // SSL Commerz
@@ -51,7 +52,7 @@ async function run() {
             const data = {
                 total_amount: 100,
                 currency: 'BDT',
-                tran_id: `TG_ID_${tranjectionId}`, // use unique tran_id for each api call
+                tran_id: tranjectionId, // use unique tran_id for each api call
                 success_url: `${process.env.SERVER_API}/payment/success/${tranjectionId}`,
                 fail_url: `${process.env.SERVER_API}/payment/fail`,
                 cancel_url: `${process.env.SERVER_API}/payment/cancel`,
@@ -88,6 +89,13 @@ async function run() {
 
             app.post(`/payment/success/:tran_id`, (req, res) => {
                 const paymentSuccess = req.params.tran_id;
+                const paymentData = {
+                    userName: product.stdName,
+                    userEmail: product.stdEmail,
+                    userPhone: product.stdPhone,
+                    transectionId: tranjectionId,
+                    successTransectionId: paymentSuccess
+                }
                 const email = product.stdEmail;
                 const query = { email };
                 const updateData = {
@@ -96,6 +104,7 @@ async function run() {
                     }
                 }
                 allUsers.updateOne(query, updateData);
+                paymentInfo.insertOne(paymentData)
                 res.redirect(`${process.env.CLIENT_API}/registration`)
             });
 
