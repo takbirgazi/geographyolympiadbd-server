@@ -52,10 +52,10 @@ async function run() {
                 total_amount: 100,
                 currency: 'BDT',
                 tran_id: `TG_ID_${tranjectionId}`, // use unique tran_id for each api call
-                success_url: `${process.env.CLIENT_SERVER_API}/payment/success/${tranjectionId}`,
-                fail_url: `${process.env.CLIENT_SERVER_API}/payment/fail`,
-                cancel_url: `${process.env.CLIENT_SERVER_API}/payment/cancel`,
-                ipn_url: `${process.env.CLIENT_SERVER_API}/payment/ipn`,
+                success_url: `${process.env.SERVER_API}/payment/success/${tranjectionId}`,
+                fail_url: `${process.env.SERVER_API}/payment/fail`,
+                cancel_url: `${process.env.SERVER_API}/payment/cancel`,
+                ipn_url: `${process.env.SERVER_API}/payment/ipn`,
                 shipping_method: 'No Shipping',
                 product_name: 'geographyolympiadbd',
                 product_category: 'geographyolympiadbd',
@@ -96,14 +96,14 @@ async function run() {
                     }
                 }
                 allUsers.updateOne(query, updateData);
-                res.redirect("http://localhost:5173/registration")
+                res.redirect(`${process.env.CLIENT_API}/registration`)
             });
 
             app.post(`/payment/fail`, (req, res) => {
-                res.redirect("http://localhost:5173/registration")
+                res.redirect(`${process.env.CLIENT_API}/registration`)
             });
             app.post(`/payment/cancel`, (req, res) => {
-                res.redirect("http://localhost:5173/registration")
+                res.redirect(`${process.env.CLIENT_API}/registration`)
             });
 
         })
