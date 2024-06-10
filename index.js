@@ -104,7 +104,7 @@ async function run() {
                     }
                 }
                 allUsers.updateOne(query, updateData);
-                paymentInfo.insertOne(paymentData)
+                paymentInfo.insertOne(paymentData);
                 res.redirect(`${process.env.CLIENT_API}/registration`)
             });
 
