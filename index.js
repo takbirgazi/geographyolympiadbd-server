@@ -149,6 +149,11 @@ async function run() {
             const result = await allUsers.findOne(query);
             res.send(result);
         });
+        app.get('/users', async (req, res) => {
+            const users = await allUsers.find().toArray();
+            res.send(users);
+            
+        });
         app.post('/users', async (req, res) => {
             const data = req.body;
             const query = { email: data.email };
